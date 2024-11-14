@@ -1,0 +1,98 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 10
+
+// Structure for Resource Allocation Graph
+struct ResourceAllocationGraph {
+    int processes[MAX];
+    int resources[MAX];
+    int allocation[MAX][MAX];  // Allocation Matrix
+    int request[MAX][MAX];     // Request Matrix
+    int available[MAX];        // Available resources
+};
+
+// Function to initialize the graph
+void initGraph(struct ResourceAllocationGraph *rag, int p, int r) {
+    rag->processes[p];
+    rag->resources[r];
+    
+    // Initialize allocation and request matrices to zero
+    for (int i = 0; i < p; i++) {
+        for (int j = 0; j < r; j++) {
+            rag->allocation[i][j] = 0;
+            rag->request[i][j] = 0;
+        }
+    }
+    
+    // Initialize available resources
+    for (int i = 0; i < r; i++) {
+        rag->available[i] = 0;
+    }
+}
+
+// Function to check for cycle in the Resource Allocation Graph (RAG)
+int isCyclic(int processes[], int resources[], int allocation[][MAX], int request[][MAX], int p, int r) {
+    int visited[MAX] = {0};   // Visited array to keep track of processes
+    
+    // Check for each process if it is requesting resources in a way that would form a cycle
+    for (int i = 0; i < p; i++) {
+        if (visited[i] == 0) {
+            // If the process is requesting resources and no resources are available, cycle is formed
+            if (request[i][i] == 1) {
+                return 1;   // Deadlock detected (cycle detected)
+            }
+        }
+    }
+    
+    return 0;  // No cycle detected
+}
+
+// Function to detect deadlock
+void detectDeadlock(struct ResourceAllocationGraph *rag, int p, int r) {
+    // Step 1: Build the Resource Allocation Graph
+    printf("\nChecking for deadlock...\n");
+    
+    // Step 2: Check if a cycle exists in the Resource Allocation Graph
+    if (isCyclic(rag->processes, rag->resources, rag->allocation, rag->request, p, r)) {
+        printf("Deadlock Detected!\n");
+    } else {
+        printf("No Deadlock Detected.\n");
+    }
+}
+
+int main() {
+    int p, r;
+    
+    // Read number of processes and resources
+    printf("Enter the number of processes: ");
+    scanf("%d", &p);
+    
+    printf("Enter the number of resources: ");
+    scanf("%d", &r);
+    
+    struct ResourceAllocationGraph rag;
+    initGraph(&rag, p, r);
+    
+    // Read allocation and request matrices
+    for (int i = 0; i < p; i++) {
+        for (int j = 0; j < r; j++) {
+            printf("Enter allocation for process %d and resource %d: ", i + 1, j + 1);
+            scanf("%d", &rag.allocation[i][j]);
+            
+            printf("Enter request for process %d and resource %d: ", i + 1, j + 1);
+            scanf("%d", &rag.request[i][j]);
+        }
+    }
+    
+    // Read available resources
+    for (int i = 0; i < r; i++) {
+        printf("Enter the number of available resources for resource %d: ", i + 1);
+        scanf("%d", &rag.available[i]);
+    }
+    
+    // Detect deadlock
+    detectDeadlock(&rag, p, r);
+    
+    return 0;
+}

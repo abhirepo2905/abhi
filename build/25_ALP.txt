@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MEMORY_SIZE 100 // Simulated size of main memory (number of memory locations)
+
+// Function to load ALP from the input file to main memory
+void load_ALP_to_memory(const char *input_file, char memory[][256], int *memory_size) {
+    FILE *file = fopen(input_file, "r");
+    if (file == NULL) {
+        printf("Error opening file: %s\n", input_file);
+        exit(1);
+    }
+
+    // Initialize memory
+    *memory_size = 0;
+    
+    // Read each line of the file and load it to memory
+    while (fgets(memory[*memory_size], 256, file) != NULL && *memory_size < MEMORY_SIZE) {
+        // Remove newline character from the end of the instruction if present
+        memory[*memory_size][strcspn(memory[*memory_size], "\n")] = 0;
+        (*memory_size)++;
+    }
+
+    fclose(file);
+    printf("ALP loaded into memory successfully.\n");
+}
+
+// Function to print the contents of the memory
+void print_memory(char memory[][256], int memory_size) {
+    printf("\nMain Memory Contents:\n");
+    for (int i = 0; i < memory_size; i++) {
+        printf("Memory[%d]: %s\n", i, memory[i]);
+    }
+}
+
+int main() {
+    char memory[MEMORY_SIZE][256]; // Main memory (array of strings)
+    int memory_size = 0;  // Number of instructions loaded into memory
+
+    const char *input_file = "/mnt/d/Tech/ubuntu_practice/input.alp"; // Input file containing ALP (replace with your actual file path)
+
+    // Load ALP into memory
+    load_ALP_to_memory(input_file, memory, &memory_size);
+
+    // Print the contents of the memory
+    print_memory(memory, memory_size);
+
+    return 0;
+}

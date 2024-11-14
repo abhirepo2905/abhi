@@ -1,0 +1,96 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_PROCESSES 10
+#define MAX_RESOURCES 10
+
+bool is_safe(int processes, int resources, int avail[], int max[][MAX_RESOURCES], int allot[][MAX_RESOURCES]) {
+    int work[MAX_RESOURCES], finish[MAX_PROCESSES] = {0}, safe_seq[MAX_PROCESSES];
+    int need[MAX_PROCESSES][MAX_RESOURCES];
+
+    for (int i = 0; i < processes; i++) {
+        for (int j = 0; j < resources; j++) {
+            need[i][j] = max[i][j] - allot[i][j];
+        }
+    }
+
+    for (int i = 0; i < resources; i++) {
+        work[i] = avail[i];
+    }
+
+    int count = 0;
+
+    while (count < processes) {
+        bool found = false;
+
+        for (int p = 0; p < processes; p++) {
+            if (finish[p] == 0) {
+                int j;
+                for (j = 0; j < resources; j++) {
+                    if (need[p][j] > work[j]) {
+                        break;
+                    }
+                }
+
+                if (j == resources) {
+                    for (int k = 0; k < resources; k++) {
+                        work[k] += allot[p][k];
+                    }
+
+                    finish[p] = 1;
+                    safe_seq[count++] = p;
+                    found = true;
+                }
+            }
+        }
+
+        if (!found) {
+            printf("System is not in a safe state.\n");
+            return false;
+        }
+    }
+
+    printf("System is in a safe state.\nSafe sequence is: ");
+    for (int i = 0; i < processes; i++) {
+        printf("%d ", safe_seq[i]);
+    }
+    printf("\n");
+    return true;
+}
+
+int main() {
+    int processes, resources;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &processes);
+
+    printf("Enter the number of resources: ");
+    scanf("%d", &resources);
+
+    int avail[MAX_RESOURCES];
+    int max[MAX_PROCESSES][MAX_RESOURCES];
+    int allot[MAX_PROCESSES][MAX_RESOURCES];
+
+    printf("Enter the available resources: \n");
+    for (int i = 0; i < resources; i++) {
+        scanf("%d", &avail[i]);
+    }
+
+    printf("Enter the maximum matrix:\n");
+    for (int i = 0; i < processes; i++) {
+        for (int j = 0; j < resources; j++) {
+            scanf("%d", &max[i][j]);
+        }
+    }
+
+    printf("Enter the allocation matrix:\n");
+    for (int i = 0; i < processes; i++) {
+        for (int j = 0; j < resources; j++) {
+            scanf("%d", &allot[i][j]);
+        }
+    }
+
+    is_safe(processes, resources, avail, max, allot);
+
+    return 0;
+}

@@ -1,0 +1,90 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+void sum_even(int arr[], int size) {
+    int sum = 0;
+    for (int i = 0; i < size; i++) {
+        if (arr[i] % 2 == 0) {
+            sum += arr[i];
+        }
+    }
+    printf("Sum of even numbers (Parent): %d\n", sum);
+}
+
+void sum_odd(int arr[], int size) {
+    int sum = 0;
+    for (int i = 0; i < size; i++) {
+        if (arr[i] % 2 != 0) {
+            sum += arr[i];
+        }
+    }
+    printf("Sum of odd numbers (Child): %d\n", sum);
+}
+
+int main() {
+    pid_t pid;
+
+    // Part 1: Zombie Process
+    pid = fork();
+    if (pid < 0) {
+        perror("Fork failed");
+        exit(1);
+    }
+
+    if (pid == 0) {
+        // Child process
+        printf("Child process with PID %d, Parent PID: %d\n", getpid(), getppid());
+        exit(0); // Child exits immediately, creating a zombie
+    } else {
+        // Parent process
+        printf("Parent process with PID %d\n", getpid());
+        sleep(5);  // Sleep to simulate a delay, allowing child to become a zombie
+        printf("Parent exiting...\n");
+    }
+
+    // Part 2: Orphan Process
+    pid = fork();
+    if (pid < 0) {
+        perror("Fork failed");
+        exit(1);
+    }
+
+    if (pid == 0) {
+        // Child process becomes orphan after parent exits
+        printf("Child process with PID %d, Parent PID: %d\n", getpid(), getppid());
+        sleep(10);  // Child sleeps to allow time for parent to terminate
+        printf("Child process with PID %d now has parent PID %d (init process)\n", getpid(), getppid());
+    } else {
+        // Parent process exits early, making child an orphan
+        printf("Parent process with PID %d\n", getpid());
+        sleep(2);  // Parent exits before the child
+        printf("Parent exiting...\n");
+        exit(0);
+    }
+
+    // Part 3: Sum of Even and Odd Numbers by Parent and Child Process
+    int arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    int size = sizeof(arr) / sizeof(arr[0]);
+
+    pid = fork();
+    if (pid < 0) {
+        perror("Fork failed");
+        exit(1);
+    }
+
+    if (pid == 0) {
+        // Child process: Sum of odd numbers
+        sum_odd(arr, size);
+    } else {
+        // Parent process: Sum of even numbers
+        sum_even(arr, size);
+
+        // Wait for the child process to finish
+        wait(NULL);
+    }
+
+    return 0;
+}

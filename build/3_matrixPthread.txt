@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+#define MAX 4 // Define maximum size of matrix
+
+// Define matrices
+int matA[MAX][MAX];
+int matB[MAX][MAX];
+int matC[MAX][MAX];
+
+typedef struct {
+    int row; 
+    int col; 
+} thread_data;
+
+void* multiply(void* arg) {
+    thread_data* data = (thread_data*) arg;
+    int sum = 0;
+
+    for (int i = 0; i < MAX; i++) {
+        sum += matA[data->row][i] * matB[i][data->col];
+    }
+    matC[data->row][data->col] = sum;
+    pthread_exit(0);
+}
+
+int main() {
+    pthread_t threads[MAX][MAX];
+    thread_data thread_args[MAX][MAX];
+
+    printf("Enter elements of Matrix A (4x4):\n");
+    for (int i = 0; i < MAX; i++) {
+        for (int j = 0; j < MAX; j++) {
+            scanf("%d", &matA[i][j]);
+        }
+    }
+
+    printf("Enter elements of Matrix B (4x4):\n");
+    for (int i = 0; i < MAX; i++) {
+        for (int j = 0; j < MAX; j++) {
+            scanf("%d", &matB[i][j]);
+        }
+    }
+
+    for (int i = 0; i < MAX; i++) {
+        for (int j = 0; j < MAX; j++) {
+            thread_args[i][j].row = i;
+            thread_args[i][j].col = j;
+            pthread_create(&threads[i][j], NULL, multiply, &thread_args[i][j]);
+        }
+    }
+
+    for (int i = 0; i < MAX; i++) {
+        for (int j = 0; j < MAX; j++) {
+            pthread_join(threads[i][j], NULL);
+        }
+    }
+    printf("Resultant Matrix C (4x4):\n");
+    for (int i = 0; i < MAX; i++) {
+        for (int j = 0; j < MAX; j++) {
+            printf("%d ", matC[i][j]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}

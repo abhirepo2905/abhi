@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void calculateSeekTime(int arr[], int n, int start) {
+    int visited[n];
+    int total_seek_time = 0;
+    int current_position = start;
+    
+    // Initialize all requests as not visited
+    for (int i = 0; i < n; i++) {
+        visited[i] = 0;
+    }
+    
+    printf("\nSSTF Disk Scheduling\n");
+    printf("Request\tSeek Time\tCurrent Position\n");
+    
+    // Loop through all requests
+    for (int count = 0; count < n; count++) {
+        int min_seek_time = 9999999;
+        int index = -1;
+        
+        // Find the request with the shortest seek time
+        for (int i = 0; i < n; i++) {
+            if (!visited[i]) {
+                int seek_time = abs(arr[i] - current_position);
+                if (seek_time < min_seek_time) {
+                    min_seek_time = seek_time;
+                    index = i;
+                }
+            }
+        }
+        
+        // Mark the selected request as visited
+        visited[index] = 1;
+        
+        // Calculate the seek time and update the total seek time
+        total_seek_time += min_seek_time;
+        current_position = arr[index];
+        
+        // Print the current request's details
+        printf("%d\t\t%d\t\t%d\n", arr[index], min_seek_time, current_position);
+    }
+    
+    // Print the total seek time
+    printf("\nTotal Seek Time: %d\n", total_seek_time);
+}
+
+int main() {
+    int n, start;
+    
+    // Input for number of requests and starting position
+    printf("Enter the number of disk requests: ");
+    scanf("%d", &n);
+    
+    int arr[n];
+    
+    // Input the disk requests
+    printf("Enter the disk requests (space separated): ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+    
+    // Input the starting position of the disk head
+    printf("Enter the starting position of the disk head: ");
+    scanf("%d", &start);
+    
+    calculateSeekTime(arr, n, start);
+
+    return 0;
+}

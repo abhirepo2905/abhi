@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Define maximum number of valid opcodes and operand range
+#define MAX_OPCODES 5
+#define MAX_OPERAND 100 // Define the range of valid operands (e.g., 0 to 100)
+
+// Function to simulate an interrupt (error)
+void raise_interrupt(const char *error_message) {
+    printf("Error: %s\n", error_message);
+    printf("Interrupt raised! Exiting the program...\n");
+    exit(1); // Terminate the program on error
+}
+
+// Function to check if the opcode is valid
+int is_valid_opcode(const char *opcode) {
+    // List of valid opcodes
+    const char *valid_opcodes[MAX_OPCODES] = {"LOAD", "ADD", "SUB", "STORE", "JMP"};
+    
+    for (int i = 0; i < MAX_OPCODES; i++) {
+        if (strcmp(opcode, valid_opcodes[i]) == 0) {
+            return 1; // Valid opcode
+        }
+    }
+    return 0; // Invalid opcode
+}
+
+// Function to check if the operand is valid
+int is_valid_operand(int operand) {
+    if (operand < 0 || operand > MAX_OPERAND) {
+        return 0; // Invalid operand
+    }
+    return 1; // Valid operand
+}
+
+// Function to process the job (list of instructions and operands)
+void process_job(const char instructions[][10], int operands[], int num_instructions) {
+    for (int i = 0; i < num_instructions; i++) {
+        printf("Processing instruction: %s %d\n", instructions[i], operands[i]);
+        
+        // Check if the opcode is valid
+        if (!is_valid_opcode(instructions[i])) {
+            raise_interrupt("Invalid opcode encountered!");
+        }
+        
+        // Check if the operand is valid
+        if (!is_valid_operand(operands[i])) {
+            raise_interrupt("Invalid operand encountered!");
+        }
+    }
+    printf("All instructions processed successfully.\n");
+}
+
+int main() {
+    int num_instructions;
+    
+    // Ask the user for the number of instructions
+    printf("Enter the number of instructions: ");
+    scanf("%d", &num_instructions);
+
+    // Arrays to store instructions and operands
+    char instructions[num_instructions][10];
+    int operands[num_instructions];
+    
+    // Take input instructions and operands from the user
+    printf("Enter the instructions and operands (e.g., LOAD 25):\n");
+    for (int i = 0; i < num_instructions; i++) {
+        scanf("%s %d", instructions[i], &operands[i]);
+    }
+    
+    // Process the job and check for opcode and operand errors
+    process_job(instructions, operands, num_instructions);
+    
+    return 0;
+}

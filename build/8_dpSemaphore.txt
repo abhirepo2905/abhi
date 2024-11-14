@@ -1,0 +1,98 @@
+#include <pthread.h>
+#include <semaphore.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#define N 5  // Number of philosophers
+#define THINKING 0
+#define HUNGRY 1
+#define EATING 2
+#define LEFT (philosopher + 4) % N
+#define RIGHT (philosopher + 1) % N
+
+// States of each philosopher
+int state[N];
+sem_t mutex;
+sem_t forks[N];
+
+// Philosopher functions
+void *philosopher(void *num);
+void take_fork(int philosopher);
+void put_fork(int philosopher);
+void test(int philosopher);
+
+int main() {
+    pthread_t thread_id[N];
+
+    // Initialize the semaphores
+    sem_init(&mutex, 0, 1);
+    for (int i = 0; i < N; i++) {
+        sem_init(&forks[i], 0, 0);
+    }
+
+    // Create philosopher threads
+    for (int i = 0; i < N; i++) {
+        int *philosopher_id = malloc(sizeof(int));  // Allocate memory for each philosopher's ID
+        *philosopher_id = i;
+        pthread_create(&thread_id[i], NULL, philosopher, philosopher_id);  // Pass pointer to unique ID
+        printf("Philosopher %d is thinking.\n", i + 1);
+    }
+
+    // Join all philosopher threads
+    for (int i = 0; i < N; i++) {
+        pthread_join(thread_id[i], NULL);
+    }
+
+    return 0;
+}
+
+void *philosopher(void *num) {
+    int philosopher = *(int *)num;  // Cast void* back to int*
+    free(num);  // Free allocated memory for ID
+    while (1) {
+        sleep(1);  // Thinking
+        take_fork(philosopher);
+        sleep(0);  // Eating
+        put_fork(philosopher);
+    }
+}
+
+void take_fork(int philosopher) {
+    sem_wait(&mutex);  // Enter critical section
+    state[philosopher] = HUNGRY;
+    printf("Philosopher %d is hungry.\n", philosopher + 1);
+
+    // Try to acquire forks
+    test(philosopher);
+    sem_post(&mutex);  // Exit critical section
+
+    // Wait until philosopher is granted access to eat
+    sem_wait(&forks[philosopher]);
+}
+
+void put_fork(int philosopher) {
+    sem_wait(&mutex);  // Enter critical section
+    state[philosopher] = THINKING;
+    printf("Philosopher %d is putting down forks and starts thinking.\n", philosopher + 1);
+
+    // Test if the neighbors can now eat
+    test(LEFT);
+    test(RIGHT);
+
+    sem_post(&mutex);  // Exit critical section
+}
+
+// Checks if a philosopher can start eating
+void test(int philosopher) {
+    if (state[philosopher] == HUNGRY &&
+        state[LEFT] != EATING &&
+        state[RIGHT] != EATING) {
+        // State of philosopher changes to EATING
+        state[philosopher] = EATING;
+        printf("Philosopher %d is eating.\n", philosopher + 1);
+
+        // Allow philosopher to start eating
+        sem_post(&forks[philosopher]);
+    }
+}

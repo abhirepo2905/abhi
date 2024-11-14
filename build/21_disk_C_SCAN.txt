@@ -1,0 +1,124 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void calculateSeekTime(int arr[], int n, int start, int disk_size, int direction) {
+    int total_seek_time = 0;
+    int current_position = start;
+
+    // Sort the disk requests
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (arr[i] > arr[j]) {
+                int temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+    }
+
+    int left[n], right[n];
+    int left_count = 0, right_count = 0;
+
+    // Divide the requests into left and right of the start position
+    for (int i = 0; i < n; i++) {
+        if (arr[i] < start) {
+            left[left_count++] = arr[i];
+        } else {
+            right[right_count++] = arr[i];
+        }
+    }
+
+    // Calculate total seek time
+    printf("\nC-SCAN Disk Scheduling\n");
+    printf("Request\tSeek Time\tCurrent Position\n");
+
+    // Move right first (C-SCAN moves towards the end first)
+    if (direction == 1) {
+        // Move from start position to the end
+        total_seek_time += arr[right_count - 1] - start;
+        current_position = arr[right_count - 1];
+        printf("%d\t\t%d\t\t%d\n", arr[right_count - 1], arr[right_count - 1] - start, current_position);
+
+        // Process all the right side requests
+        for (int i = right_count - 1; i >= 0; i--) {
+            int seek_time = abs(current_position - right[i]);
+            total_seek_time += seek_time;
+            current_position = right[i];
+            printf("%d\t\t%d\t\t%d\n", right[i], seek_time, current_position);
+        }
+
+        // Now move to the extreme left (zero track)
+        total_seek_time += arr[n - 1] - arr[0];
+        current_position = arr[0];
+        printf("%d\t\t%d\t\t%d\n", arr[0], arr[n - 1] - arr[0], current_position);
+
+        // Then process the left side requests (from start to the highest number)
+        for (int i = 0; i < left_count; i++) {
+            int seek_time = abs(current_position - left[i]);
+            total_seek_time += seek_time;
+            current_position = left[i];
+            printf("%d\t\t%d\t\t%d\n", left[i], seek_time, current_position);
+        }
+    } else {
+        // Move from start position to the left
+        total_seek_time += start - arr[0];
+        current_position = arr[0];
+        printf("%d\t\t%d\t\t%d\n", arr[0], start - arr[0], current_position);
+
+        // Process all the left side requests
+        for (int i = left_count - 1; i >= 0; i--) {
+            int seek_time = abs(current_position - left[i]);
+            total_seek_time += seek_time;
+            current_position = left[i];
+            printf("%d\t\t%d\t\t%d\n", left[i], seek_time, current_position);
+        }
+
+        // Now move to the extreme right (maximum track number)
+        total_seek_time += arr[n - 1] - arr[0];
+        current_position = arr[n - 1];
+        printf("%d\t\t%d\t\t%d\n", arr[n - 1], arr[n - 1] - arr[0], current_position);
+
+        // Then process the right side requests (from start to the highest number)
+        for (int i = 0; i < right_count; i++) {
+            int seek_time = abs(current_position - right[i]);
+            total_seek_time += seek_time;
+            current_position = right[i];
+            printf("%d\t\t%d\t\t%d\n", right[i], seek_time, current_position);
+        }
+    }
+
+    // Print the total seek time
+    printf("\nTotal Seek Time: %d\n", total_seek_time);
+}
+
+int main() {
+    int n, start, disk_size, direction;
+
+    // Input for number of requests, starting position, disk size, and direction
+    printf("Enter the number of disk requests: ");
+    scanf("%d", &n);
+
+    int arr[n];
+
+    // Input the disk requests
+    printf("Enter the disk requests (space separated): ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    // Input the starting position of the disk head
+    printf("Enter the starting position of the disk head: ");
+    scanf("%d", &start);
+
+    // Input the disk size (maximum number of tracks)
+    printf("Enter the disk size (number of tracks): ");
+    scanf("%d", &disk_size);
+
+    // Input the initial direction of the disk head (1 for right, 0 for left)
+    printf("Enter the initial direction of the disk head (0 for left, 1 for right): ");
+    scanf("%d", &direction);
+
+    calculateSeekTime(arr, n, start, disk_size, direction);
+
+    return 0;
+}

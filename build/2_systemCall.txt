@@ -1,0 +1,143 @@
+Design menu driven application demonstrating use of different system calls.
+1. process related system call:fork,exit, wait,
+2) file realted system call: open,read,write,close,link,unlink,stat
+3) communication system call:pipe,fifo,
+4)information related system call
+
+
+Code:
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <pthread.h>
+#include <string.h>
+
+void process_related() {
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("Fork failed");
+    } else if (pid == 0) {
+        printf("Child process: PID = %d\n", getpid());
+        exit(0);
+    } else {
+        printf("Parent process: PID = %d, waiting for child to finish...\n", getpid());
+        wait(NULL);
+        printf("Child process finished.\n");
+    }
+}
+
+void file_related() {
+    int fd;
+    char buffer[100];
+
+    fd = open("testfile.txt", O_CREAT | O_RDWR, 0666);
+    if (fd == -1) {
+        perror("Failed to open the file");
+        return;
+    }
+
+    char *data = "This is some test data to write to the file.\n";
+    write(fd, data, strlen(data));
+
+    lseek(fd, 0, SEEK_SET); 
+    read(fd, buffer, sizeof(buffer));
+    printf("Data read from file: %s", buffer);
+
+    close(fd);
+    
+    struct stat file_stat;
+    if (stat("testfile.txt", &file_stat) == 0) {
+        printf("File size: %ld bytes\n", file_stat.st_size);
+    }
+
+    link("testfile.txt", "hardlink_testfile.txt");
+    unlink("hardlink_testfile.txt");
+    printf("Hard link created and then removed.\n");
+}
+
+void* write_pipe(void* fd) {
+    int* pipe_fd = (int*) fd;
+    write(pipe_fd[1], "Message from the writer thread.\n", 32);
+    close(pipe_fd[1]);
+    return NULL;
+}
+
+void* read_pipe(void* fd) {
+    int* pipe_fd = (int*) fd;
+    char buffer[100];
+    read(pipe_fd[0], buffer, sizeof(buffer));
+    printf("Message received: %s", buffer);
+    close(pipe_fd[0]);
+    return NULL;
+}
+
+void communication_related() {
+    int pipe_fd[2];
+    if (pipe(pipe_fd) == -1) {
+        perror("Pipe failed");
+        return;
+    }
+
+    pthread_t writer_thread, reader_thread;
+
+    pthread_create(&writer_thread, NULL, write_pipe, pipe_fd);
+    pthread_create(&reader_thread, NULL, read_pipe, pipe_fd);
+
+    pthread_join(writer_thread, NULL);
+    pthread_join(reader_thread, NULL);
+
+    printf("Pipe communication complete.\n");
+}
+
+void information_related() {
+    printf("Process ID: %d\n", getpid());
+    printf("Parent Process ID: %d\n", getppid());
+    printf("User ID: %d\n", getuid());
+    printf("Group ID: %d\n", getgid());
+
+    long num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+    printf("Number of CPUs: %ld\n", num_cpus);
+
+    long page_size = sysconf(_SC_PAGESIZE);
+    printf("Page size: %ld bytes\n", page_size);
+}
+
+int main() {
+    int choice;
+    do {
+        printf("\nMenu:\n");
+        printf("1. Process Related System Calls (fork, wait, exit)\n");
+        printf("2. File Related System Calls (open, read, write, close, link, unlink, stat)\n");
+        printf("3. Communication System Calls (pipe)\n");
+        printf("4. Information Related System Calls (getpid, getuid, sysconf)\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                process_related();
+                break;
+            case 2:
+                file_related();
+                break;
+            case 3:
+                communication_related();
+                break;
+            case 4:
+                information_related();
+                break;
+            case 5:
+                printf("Exiting program.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 5);
+
+    return 0;
+}

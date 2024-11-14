@@ -1,0 +1,108 @@
+#!/bin/bash
+
+# File to store the student database
+DATABASE="students_db.txt"
+
+# Function to display menu
+display_menu() {
+    echo "Student Database Operations:"
+    echo "1. Insert Student"
+    echo "2. Delete Student"
+    echo "3. Update Student"
+    echo "4. Search Student"
+    echo "5. Exit"
+}
+
+# Function to insert a student
+insert_student() {
+    echo "Enter Student ID:"
+    read student_id
+    echo "Enter Student Name:"
+    read student_name
+    echo "Enter Student Age:"
+    read student_age
+
+    # Append new student record to the database
+    echo "$student_id,$student_name,$student_age" >> $DATABASE
+    echo "Student added successfully."
+}
+
+# Function to delete a student by student ID
+delete_student() {
+    echo "Enter Student ID to delete:"
+    read student_id
+
+    # Check if the student exists
+    grep -q "^$student_id," $DATABASE
+    if [ $? -eq 0 ]; then
+        # Delete the student record from the database
+        sed -i "/^$student_id,/d" $DATABASE
+        echo "Student with ID $student_id deleted successfully."
+    else
+        echo "Student ID $student_id not found."
+    fi
+}
+
+# Function to update student information
+update_student() {
+    echo "Enter Student ID to update:"
+    read student_id
+
+    # Check if the student exists
+    grep -q "^$student_id," $DATABASE
+    if [ $? -eq 0 ]; then
+        echo "Enter new Name for Student $student_id:"
+        read new_name
+        echo "Enter new Age for Student $student_id:"
+        read new_age
+
+        # Update the student's record in the database
+        sed -i "s/^$student_id,.*$/$student_id,$new_name,$new_age/" $DATABASE
+        echo "Student with ID $student_id updated successfully."
+    else
+        echo "Student ID $student_id not found."
+    fi
+}
+
+# Function to search for a student by student ID
+search_student() {
+    echo "Enter Student ID to search:"
+    read student_id
+
+    # Search for the student in the database
+    student=$(grep "^$student_id," $DATABASE)
+    if [ $? -eq 0 ]; then
+        echo "Student Found: $student"
+    else
+        echo "Student ID $student_id not found."
+    fi
+}
+
+# Main loop to display the menu and perform operations
+while true; do
+    display_menu
+    echo "Enter your choice:"
+    read choice
+
+    case $choice in
+        1)
+            insert_student
+            ;;
+        2)
+            delete_student
+            ;;
+        3)
+            update_student
+            ;;
+        4)
+            search_student
+            ;;
+        5)
+            echo "Exiting..."
+            break
+            ;;
+        *)
+            echo "Invalid choice, please try again."
+            ;;
+    esac
+done
